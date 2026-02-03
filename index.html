@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chatbot - Tu Negocio</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .chat-container {
+            width: 90%;
+            max-width: 400px;
+            height: 80vh;
+            background: #fff;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .chat-header {
+            background: linear-gradient(135deg, #25D366 0%, #128C7E 100%);
+            color: white;
+            padding: 20px;
+            text-align: center;
+            position: relative;
+        }
+
+        .chat-header h2 {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+
+        .chat-header p {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+
+        .chat-messages {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            background: #f8f9fa;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .message {
+            display: flex;
+            max-width: 85%;
+            animation: fadeIn 0.3s ease-in;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .message.user {
+            align-self: flex-end;
+        }
+
+        .message.bot {
+            align-self: flex-start;
+        }
+
+        .message-content {
+            padding: 12px 16px;
+            border-radius: 18px;
+            position: relative;
+        }
+
+        .message.user .message-content {
+            background: linear-gradient(135deg, #25D366 0%, #128C7E 100%);
+            color: white;
+            border-bottom-right-radius: 4px;
+        }
+
+        .message.bot .message-content {
+            background: white;
+            color: #333;
+            border: 1px solid #e9ecef;
+            border-bottom-left-radius: 4px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+
+        .message-time {
+            font-size: 11px;
+            opacity: 0.7;
+            margin-top: 5px;
+            text-align: right;
+        }
+
+        .typing-indicator {
+            display: none;
+            align-self: flex-start;
+            padding: 12px 16px;
+        }
+
+        .typing-dots {
+            display: flex;
+            gap: 4px;
+        }
+
+        .typing-dots span {
+            width: 8px;
+            height: 8px;
+            background: #999;
+            border-radius: 50%;
+            animation: typing 1.4s infinite;
+        }
+
+        .typing-dots span:nth-child(2) { animation-delay: 0.2s; }
+        .typing-dots span:nth-child(3) { animation-delay: 0.4s; }
+
+        @keyframes typing {
+            0%, 60%, 100% { transform: translateY(0); }
+            30% { transform: translateY(-10px); }
+        }
+
+        .chat-input {
+            padding: 20px;
+            background: white;
+            border-top: 1px solid #e9ecef;
+            display: flex;
+            gap: 10px;
+        }
+
+        .input-field {
+            flex: 1;
+            border: 1px solid #e9ecef;
+            border-radius: 25px;
+            padding: 12px 20px;
+            font-size: 14px;
+            outline: none;
+            transition: all 0.3s ease;
+        }
+
+        .input-field:focus {
+            border-color: #25D366;
+            box-shadow: 0 0 0 3px rgba(37, 211, 102, 0.1);
+        }
+
+        .send-btn {
+            width: 45px;
+            height: 45px;
+            border: none;
+            background: linear-gradient(135deg, #25D366 0%, #128C7E 100%);
+            color: white;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+            font-size: 18px;
+        }
+
+        .send-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 5px 15px rgba(37, 211, 102, 0.4);
+        }
+
+        .send-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* Scrollbar personalizada */
+        .chat-messages::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        .chat-messages::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .chat-messages::-webkit-scrollbar-thumb {
+            background: #c1c1c1;
+            border-radius: 2px;
+        }
+
+        /* Responsive */
+        @media (max-width: 480px) {
+            .chat-container {
+                width: 95%;
+                height: 90vh;
+                border-radius: 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="chat-container">
+        <div class="chat-header">
+            <h2>🤖 Chatbot de Tu Negocio</h2>
+            <p>¡Estoy aquí para ayudarte! 💬</p>
+        </div>
+        
+        <div class="chat-messages" id="chatMessages">
+            <div class="message bot">
+                <div class="message-content">
+                    ¡Hola! 👋 Bienvenido(a) al chatbot de <strong>Tu Negocio</strong>. 
+                    Estoy aquí para responder todas tus preguntas de manera formal y profesional. 
+                    ¿En qué puedo ayudarte hoy? 😊
+                </div>
+            </div>
+        </div>
+
+        <div class="typing-indicator" id="typingIndicator">
+            <div class="typing-dots">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+        </div>
+
+        <div class="chat-input">
+            <input type="text" class="input-field" id="messageInput" 
+                   placeholder="Escribe tu mensaje aquí..." maxlength="1000">
+            <button class="send-btn" id="sendBtn">➤</button>
+        </div>
+    </div>
+
+    <script>
+        class Chatbot {
+            constructor() {
+                this.apiKey = 'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx'; // Tu API Key aquí
+                this.chatMessages = document.getElementById('chatMessages');
+                this.messageInput = document.getElementById('messageInput');
+                this.sendBtn = document.getElementById('sendBtn');
+                this.typingIndicator = document.getElementById('typingIndicator');
+                
+                this.init();
+            }
+
+            init() {
+                this.sendBtn.addEventListener('click', () => this.sendMessage());
+                this.messageInput.addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                        e.preventDefault();
+                        this.sendMessage();
+                    }
+                });
+
+                // Enfocar input automáticamente
+                this.messageInput.focus();
+            }
+
+            async sendMessage() {
+                const message = this.messageInput.value.trim();
+                if (!message) return;
+
+                // Deshabilitar envío mientras procesa
+                this.sendBtn.disabled = true;
+                this.messageInput.disabled = true;
+
+                // Añadir mensaje del usuario
+                this.addMessage(message, 'user');
+                this.messageInput.value = '';
+
+                // Mostrar indicador de escritura
+                this.showTyping();
+
+                try {
+                    const response = await this.getGeminiResponse(message);
+                    this.hideTyping();
+                    this.addMessage(response, 'bot');
+                } catch (error) {
+                    this.hideTyping();
+                    this.addMessage('❌ Lo siento, ocurrió un error al procesar tu mensaje. Por favor, intenta nuevamente. 😔', 'bot');
+                    console.error('Error:', error);
+                } finally {
+                    this.sendBtn.disabled = false;
+                    this.messageInput.disabled = false;
+                    this.messageInput.focus();
+                }
+            }
+
+            showTyping() {
+                this.typingIndicator.style.display = 'flex';
+                this.chatMessages.scrollTop = this.chatMessages.scrollHeight;
+            }
+
+            hideTyping() {
+                this.typingIndicator.style.display = 'none';
+            }
+
+            addMessage(text, sender) {
+                const messageDiv = document.createElement('div');
+                messageDiv.className = `message ${sender}`;
+
+                const messageContent = document.createElement('div');
+                messageContent.className = 'message-content';
+                messageContent.innerHTML = text;
+
+                const timeDiv = document.createElement('div');
+                timeDiv.className = 'message-time';
+                timeDiv.textContent = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+
+                messageDiv.appendChild(messageContent);
+                messageDiv.appendChild(timeDiv);
+                this.chatMessages.appendChild(messageDiv);
+
+                // Scroll automático al final
+                this.chatMessages.scrollTop = this.chatMessages.scrollHeight;
+            }
+
+            async getGeminiResponse(message) {
+                const url = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent';
+                
+                const prompt = `Eres el chatbot oficial de "Tu Negocio". Responde de manera formal, profesional y amigable usando emojis formales (👋✅📞💼📧 etc.). Siempre mantén un tono empresarial y cortés.
+
+Antecedentes del negocio:
+- Empresa líder en [tu industria]
+- Excelente servicio al cliente
+- Horarios: Lunes a Viernes 9:00-18:00, Sábados 9:00-14:00
+- Contacto: contacto@tunegocio.com | +51 999 999 999
+
+Pregunta del cliente: "${message}"
+
+Responde de forma concisa (máximo 3-4 oraciones), útil y termina ofreciendo más ayuda si es necesario.`;
+
+                const requestBody = {
+                    contents: [{
+                        parts: [{
+                            text: prompt
+                        }]
+                    }],
+                    generationConfig: {
+                        temperature: 0.7,
+                        topK: 40,
+                        topP: 0.95,
+                        maxOutputTokens: 200,
+                    }
+                };
+
+                const response = await fetch(`${url}?key=${this.apiKey}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(requestBody)
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const data = await response.json();
+                const botResponse = data.candidates[0].content.parts[0].text;
+                
+                return botResponse.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                                 .replace(/\*(.*?)\*/g, '<em>$1</em>');
+            }
+        }
+
+        // Inicializar chatbot cuando carga la página
+        document.addEventListener('DOMContentLoaded', () => {
+            new Chatbot();
+        });
+    </script>
+</body>
+</html>
